@@ -1,0 +1,34 @@
+{
+  "name": "@hello10/logger",
+  "version": "0.0.1",
+  "description": "Logger",
+  "main": "dist/index.js",
+  "source": "src/index.js",
+  "repository": "git@github.com:Hello10/logger.git",
+  "license": "MIT",
+  "author": {
+    "name": "Stephen Handley",
+    "email": "stephen@hello10.com",
+    "url": "https://hello10.com"
+  },
+  "scripts": {
+    "build": "microbundle --target node",
+    "clean": "rm -rf node_modules && rm -rf dist && rm -f yarn.lock",
+    "dev": "microbundle watch --target node",
+    "lint": "yarn eslint ./src",
+    "test": "yarn nyc mocha --ui bdd test.js"
+  },
+  "devDependencies": {
+    "@hello10/eslint-config": "1.0.2",
+    "babel-eslint": "10.1.0",
+    "eslint": "6.8.0",
+    "eslint-config-airbnb-base": "14.1.0",
+    "eslint-plugin-import": "2.20.2",
+    "eslint-plugin-promise": "4.2.1",
+    "microbundle": "0.12.0",
+    "mocha": "7.1.1",
+    "nyc": "15.0.1",
+    "parcel-bundler": "1.12.4",
+    "sinon": "9.0.2"
+  }
+}
