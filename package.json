@@ -1,6 +1,6 @@
 {
   "name": "@hello10/logger",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Logger",
   "main": "dist/index.js",
   "source": "src/index.js",

@@ -29,17 +29,21 @@ function isError(arg) {
 
 class Logger {
   constructor(context = {}) {
-    this.context = context;
+    if (isString(context)) {
+      context = {
+        name: context
+      };
+    }
 
     if (!('name' in context)) {
       throw new Error('Must specify name for logger');
     }
 
+    this.context = context;
     const {
       name
     } = context;
     this.name = name;
-    this.names = name.split(NAME_DELIMITER);
   }
 
   static enabled({
