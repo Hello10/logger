@@ -94,6 +94,51 @@
       this._level = level;
     }
 
+    static readConfig() {
+      function getConfig(key) {
+        if (typeof process !== 'undefined') {
+          var _process$env;
+
+          let config = (_process$env = process.env) == null ? void 0 : _process$env[key];
+
+          if (config) {
+            return config;
+          }
+        }
+
+        if (typeof window !== 'undefined') {
+          var _window$localStorage, _window$localStorage2;
+
+          config = (_window$localStorage = window.localStorage) == null ? void 0 : _window$localStorage[key];
+
+          if (config) {
+            return config;
+          }
+
+          const key_lower = key.toLowerCase();
+          config = (_window$localStorage2 = window.localStorage) == null ? void 0 : _window$localStorage2[key_lower];
+
+          if (config) {
+            return config;
+          }
+        }
+
+        return null;
+      }
+
+      const level = getConfig('DEBUG_LEVEL') || getConfig('LOGGER_LEVEL');
+
+      if (level) {
+        this.level = level;
+      }
+
+      const names = getConfig('DEBUG') || getConfig('LOGGER');
+
+      if (names) {
+        this.names = names;
+      }
+    }
+
     static set names(names) {
       if (!Array.isArray(names)) {
         if (isString(names)) {
@@ -164,6 +209,7 @@
   Logger.includes = [];
   Logger.excludes = [];
   Logger._level = 'info';
+  Logger.levels = Levels;
   Levels.forEach(level => {
     const {
       console
@@ -189,7 +235,7 @@
 
     Levels[level] = level;
   });
-  Logger.levels = Levels;
+  Logger.readConfig();
 
   return Logger;
 

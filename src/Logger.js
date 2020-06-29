@@ -80,6 +80,42 @@ export default class Logger {
     this._level = level;
   }
 
+  static readConfig () {
+    function getConfig (key) {
+      if (typeof process !== 'undefined') {
+        let config = process.env?.[key];
+        if (config) {
+          return config;
+        }
+      }
+
+      if (typeof window !== 'undefined') {
+        config = window.localStorage?.[key];
+        if (config) {
+          return config;
+        }
+
+        const key_lower = key.toLowerCase();
+        config = window.localStorage?.[key_lower];
+        if (config) {
+          return config;
+        }
+      }
+
+      return null;
+    }
+
+    const level = getConfig('DEBUG_LEVEL') || getConfig('LOGGER_LEVEL');
+    if (level) {
+      this.level = level;
+    }
+
+    const names = getConfig('DEBUG') || getConfig('LOGGER');
+    if (names) {
+      this.names = names;
+    }
+  }
+
   static set names (names) {
     if (!Array.isArray(names)) {
       if (isString(names)) {
@@ -138,6 +174,7 @@ export default class Logger {
   }
 }
 
+Logger.levels = Levels;
 Levels.forEach((level)=> {
   const {console} = global;
   const fn = (level === 'fatal') ? 'error' : level;
@@ -152,4 +189,4 @@ Levels.forEach((level)=> {
   Levels[level] = level;
 });
 
-Logger.levels = Levels;
+Logger.readConfig();
