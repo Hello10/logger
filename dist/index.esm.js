@@ -91,10 +91,12 @@ class Logger {
 
   static readConfig() {
     function getConfig(key) {
+      let config;
+
       if (typeof process !== 'undefined') {
         var _process$env;
 
-        let config = (_process$env = process.env) == null ? void 0 : _process$env[key];
+        config = (_process$env = process.env) == null ? void 0 : _process$env[key];
 
         if (config) {
           return config;

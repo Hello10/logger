@@ -82,8 +82,10 @@ export default class Logger {
 
   static readConfig () {
     function getConfig (key) {
+      let config;
+
       if (typeof process !== 'undefined') {
-        let config = process.env?.[key];
+        config = process.env?.[key];
         if (config) {
           return config;
         }
