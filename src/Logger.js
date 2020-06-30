@@ -141,13 +141,21 @@ export default class Logger {
   }
 
   child (context = {}) {
+    if (isString(context)) {
+      context = {
+        name: context
+      };
+    }
+
     let {name} = this.context;
     if ('name' in context) {
       name = [name, context.name].join(NAME_DELIMITER);
     }
+
     const new_context = {...this.context, ...context, name};
     const child = new this.constructor(new_context);
     child.level = this.level;
+
     return child;
   }
 

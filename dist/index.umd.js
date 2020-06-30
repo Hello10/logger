@@ -166,6 +166,12 @@
     }
 
     child(context = {}) {
+      if (isString(context)) {
+        context = {
+          name: context
+        };
+      }
+
       let {
         name
       } = this.context;
