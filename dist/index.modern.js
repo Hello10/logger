@@ -1,4 +1,5 @@
 const Levels = ['trace', 'debug', 'info', 'warn', 'error', 'fatal'];
+const COMBO_ENV_DELIMITER = '|';
 const NAME_DELIMITER = ':';
 
 function isString(arg) {
@@ -26,6 +27,10 @@ class Logger {
       name
     } = context;
     this.name = name;
+  }
+
+  static set time(fn) {
+    this._time = fn;
   }
 
   static enabled({
@@ -89,28 +94,35 @@ class Logger {
         if (config) {
           return config;
         }
-
-        const key_lower = key.toLowerCase();
-        config = window.localStorage?.[key_lower];
-
-        if (config) {
-          return config;
-        }
       }
 
       return null;
     }
 
-    const level = getConfig('DEBUG_LEVEL') || getConfig('LOGGER_LEVEL');
+    const combo = getConfig('LOGGER');
 
-    if (level) {
-      this.level = level;
-    }
+    if (combo) {
+      const parts = combo.split(COMBO_ENV_DELIMITER);
 
-    const names = getConfig('DEBUG') || getConfig('LOGGER');
+      if (parts.length > 1) {
+        const [level, names] = parts;
+        this.level = level;
+        this.names = names;
+      } else {
+        this.names = combo;
+      }
+    } else {
+      const level = getConfig('LOGGER_LEVEL');
 
-    if (names) {
-      this.names = names;
+      if (level) {
+        this.level = level;
+      }
+
+      const names = getConfig('LOGGER_NAMES');
+
+      if (names) {
+        this.names = names;
+      }
     }
   }
 
@@ -174,16 +186,25 @@ class Logger {
           body.message = arg;
         }
       } else if (isError(arg)) {
-        body.error = arg;
-
         if (!has_message) {
           body.message = arg.message;
         }
+
+        const props = Object.getOwnPropertyNames(arg);
+        const payload = props.reduce((payload, key) => {
+          payload[key] = arg[key];
+          return payload;
+        }, {});
+        body.error = JSON.stringify(payload);
       } else if (arg) {
         body = { ...body,
           ...arg
         };
       }
+    }
+
+    if (!('time' in body)) {
+      body.time = this.constructor._time();
     }
 
     return body;
@@ -193,6 +214,11 @@ class Logger {
 Logger.includes = [];
 Logger.excludes = [];
 Logger._level = 'info';
+
+Logger._time = function () {
+  return new Date().toISOString();
+};
+
 Logger.levels = Levels;
 Levels.forEach(level => {
   const {
