@@ -2,24 +2,20 @@
 
 import Logger from './dist';
 
+// Create a logger
 let logger = new Logger({name: 'foo', something: 'wow'});
-// this will be ignored because name fails to match and level too low
-logger.info('hi');
-// this will be ignored because name fails to match
-logger.error('wow');
+logger.trace('hi'); // Ignored: name fails to match and level too low
 
-// Create a new child logger
-logger = logger.child('bar');
-// This will be shown
-logger.error('oh no');
+// Create a child logger
+logger = logger.child({name: 'bar'});
+logger.info('wow'); // Ignored: name matches but level is too low
+logger.error('oh no'); // Shown
 
 // Create another logger
 let logger2 = new Logger({name: 'ping:pong', funk: 'derp'});
-// This will be ignored because level is too low
-logger2.debug('derp');
-// This will be shown
-logger2.error(new Error('dorf'));
+logger2.debug('derp'); // Ignored: name matches but level is too low
+logger2.error(new Error('dorf')); // Shown
 
+// Create child using name shorthand
 logger2 = logger2.child('pork');
-// This will be ignored because of the explicit exclude
-logger2.fatal('bork');
+logger2.fatal('bork'); // Ignored: name is excluded
