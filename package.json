@@ -1,6 +1,6 @@
 {
   "name": "@hello10/logger",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Logger",
   "main": "dist/index.js",
   "source": "src/index.js",
@@ -15,9 +15,7 @@
     "build": "microbundle --target node",
     "clean": "rm -rf node_modules && rm -rf dist && rm -f yarn.lock",
     "dev": "microbundle watch --target node",
-    "example": "yarn example:combined",
-    "example:combined": "LOGGER='error|foo:bar*,ping:pong' babel-node ./example.js",
-    "example:separate": "LOGGER_LEVEL='error' LOGGER_NAMES='foo:bar*,ping:pong' babel-node ./example.js",
+    "example": "LOGGER='foo:bar*|error,ping:pong|info,-ping:pong:pork' babel-node ./example.js",
     "lint": "yarn eslint ./src",
     "test": "yarn nyc mocha --ui bdd test.js"
   },

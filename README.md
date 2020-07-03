@@ -10,9 +10,7 @@ You want visibility across both applications and their dependencies easily confi
 ## Example
 
 ```JavaScript
-// following two are equivalent
-// LOGGER="error|foo:bar*,ping:pong" node derp.js
-// LOGGER_NAMES="foo:bar*,ping:pong" LOGGER_LEVEL="error" node derp.js
+// LOGGER="foo:bar*|error,ping:pong|info,-ping:pong:pork" node example.js
 
 import Logger from '@hello10/logger';
 
@@ -28,11 +26,15 @@ logger = logger.child('bar');
 logger.error('oh no');
 
 // Create another logger
-const logger2 = new Logger({name: 'ping:pong', funk: 'derp'});
+let logger2 = new Logger({name: 'ping:pong', funk: 'derp'});
 // This will be ignored because level is too low
-logger2.info('derp');
+logger2.debug('derp');
 // This will be shown
 logger2.error(new Error('dorf'));
+
+logger2 = logger2.child('pork');
+// This will be ignored because of the explicit exclude
+logger2.fatal('bork');
 ```
 
 ### Output
@@ -40,13 +42,13 @@ logger2.error(new Error('dorf'));
 oh no { name: 'foo:bar',
   something: 'wow',
   message: 'oh no',
-  time: '2020-07-02T22:18:12.257Z' }
+  time: '2020-07-03T00:51:22.975Z' }
 dorf { name: 'ping:pong',
   funk: 'derp',
   message: 'dorf',
   error:
    '{"stack":"Error: dorf ...<STACKTRACE HERE>","message":"dorf"}',
-  time: '2020-07-02T22:18:12.269Z' }
+  time: '2020-07-03T00:51:22.985Z' }
 ```
 
 ## Todo

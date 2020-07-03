@@ -20,8 +20,7 @@ describe('Logger', function () {
       name: 'fucky',
       hello: 10
     });
-    Logger.names = '*';
-    Logger.level = Logger.levels.trace;
+    Logger.config = '*|trace';
   });
 
   afterEach(function () {
@@ -38,6 +37,7 @@ describe('Logger', function () {
 
   function assertLastCallArgs ({level, output}) {
     const args = getLastCallArgs({level});
+    delete args[1].time;
     Assert.deepEqual(args, output);
   }
 
@@ -107,7 +107,7 @@ describe('Logger', function () {
 
   describe('should disable and stuff', function () {
     it('should disable on level', function () {
-      Logger.level = Logger.levels.fatal;
+      Logger.config = '*|fatal';
       logger.info('Funk!');
       const args = getLastCallArgs({
         level: 'info'

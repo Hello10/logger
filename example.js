@@ -1,6 +1,4 @@
-// following two are equivalent
-// LOGGER="error|foo:bar*,ping:pong" node derp.js
-// LOGGER_NAMES="foo:bar*,ping:pong" LOGGER_LEVEL="error" node derp.js
+// LOGGER="foo:bar*|error,ping:pong|info,-ping:pong:pork" node example.js
 
 import Logger from './dist';
 
@@ -16,8 +14,12 @@ logger = logger.child('bar');
 logger.error('oh no');
 
 // Create another logger
-const logger2 = new Logger({name: 'ping:pong', funk: 'derp'});
+let logger2 = new Logger({name: 'ping:pong', funk: 'derp'});
 // This will be ignored because level is too low
-logger2.info('derp');
+logger2.debug('derp');
 // This will be shown
 logger2.error(new Error('dorf'));
+
+logger2 = logger2.child('pork');
+// This will be ignored because of the explicit exclude
+logger2.fatal('bork');

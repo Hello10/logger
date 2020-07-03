@@ -17,8 +17,12 @@ function _extends() {
 }
 
 const Levels = ['trace', 'debug', 'info', 'warn', 'error', 'fatal'];
-const COMBO_ENV_DELIMITER = '|';
+const CONFIG_DELIMITER = ',';
+const PART_DELIMITER = '|';
 const NAME_DELIMITER = ':';
+const CONFIG_SPLIT_REGEX = new RegExp(`[\\s${CONFIG_DELIMITER}]+`);
+const PART_SPLIT_REGEX = new RegExp(`[\\s${PART_DELIMITER}]+`);
+const ENV_KEY = 'LOGGER';
 
 function isString(arg) {
   return (arg == null ? void 0 : arg.constructor) === String;
@@ -26,6 +30,10 @@ function isString(arg) {
 
 function isError(arg) {
   return arg instanceof Error;
+}
+
+function bounded(pattern) {
+  return new RegExp(`^${pattern}$`);
 }
 
 class Logger {
@@ -55,53 +63,83 @@ class Logger {
     level,
     name
   }) {
-    return this.levelEnabled(level) && this.nameEnabled(name);
-  }
+    const memo_key = [level, name].join(PART_DELIMITER);
 
-  static levelEnabled(level) {
-    const level_index = Levels.indexOf(level);
-    const this_index = Levels.indexOf(this.level);
-    return level_index >= this_index;
-  }
-
-  static nameEnabled(name) {
-    if (name === '*') {
-      return true;
+    if (memo_key in this.memo) {
+      return this.memo[memo_key];
     }
 
     for (const exclude of this.excludes) {
       if (exclude.test(name)) {
+        this.memo[memo_key] = false;
         return false;
       }
     }
 
-    return this.includes.some(include => {
-      return include.test(name);
+    const enabled = this.includes.some(include => {
+      const level_index = Levels.indexOf(level);
+      const this_index = Levels.indexOf(include.level);
+      const level_enabled = level_index >= this_index;
+      return level_enabled && include.name.test(name);
     });
+    this.memo[memo_key] = enabled;
+    return enabled;
   }
 
-  static get level() {
-    return this._level;
-  }
+  static set config(configs) {
+    this.includes = [];
+    this.excludes = [];
+    this.memo = {};
 
-  static set level(level) {
-    const valid_level = Levels.includes(level);
-
-    if (!valid_level) {
-      throw new Error(`Invalid level ${level}`);
+    if (!Array.isArray(configs)) {
+      if (isString(configs)) {
+        configs = configs.split(CONFIG_SPLIT_REGEX);
+      } else {
+        throw new Error('When setting .config pass string or array of strings');
+      }
     }
 
-    this._level = level;
+    for (let config of configs) {
+      const is_exclude = config[0] === '-';
+
+      if (is_exclude) {
+        if (config.includes(PART_DELIMITER)) {
+          throw new Error('Exclude roles should not include level');
+        }
+
+        const name = bounded(config.substr(1));
+        this.excludes.push(name);
+      }
+
+      let [name, level] = config.split(PART_SPLIT_REGEX);
+      name = name.replace(/\*/g, '.*?');
+      name = bounded(name);
+
+      if (!level) {
+        level = 'error';
+      }
+
+      const valid_level = Levels.includes(level);
+
+      if (!valid_level) {
+        throw new Error(`Invalid level ${level}`);
+      }
+
+      this.includes.push({
+        name,
+        level
+      });
+    }
   }
 
   static readConfig() {
-    function getConfig(key) {
+    function read() {
       let config;
 
       if (typeof process !== 'undefined') {
         var _process$env;
 
-        config = (_process$env = process.env) == null ? void 0 : _process$env[key];
+        config = (_process$env = process.env) == null ? void 0 : _process$env[ENV_KEY];
 
         if (config) {
           return config;
@@ -111,65 +149,17 @@ class Logger {
       if (typeof window !== 'undefined') {
         var _window$localStorage;
 
-        config = (_window$localStorage = window.localStorage) == null ? void 0 : _window$localStorage[key];
+        config = (_window$localStorage = window.localStorage) == null ? void 0 : _window$localStorage[ENV_KEY];
 
         if (config) {
           return config;
         }
       }
 
-      return null;
+      return '*';
     }
 
-    const combo = getConfig('LOGGER');
-
-    if (combo) {
-      const parts = combo.split(COMBO_ENV_DELIMITER);
-
-      if (parts.length > 1) {
-        const [level, names] = parts;
-        this.level = level;
-        this.names = names;
-      } else {
-        this.names = combo;
-      }
-    } else {
-      const level = getConfig('LOGGER_LEVEL');
-
-      if (level) {
-        this.level = level;
-      }
-
-      const names = getConfig('LOGGER_NAMES');
-
-      if (names) {
-        this.names = names;
-      }
-    }
-  }
-
-  static set names(names) {
-    if (!Array.isArray(names)) {
-      if (isString(names)) {
-        names = names.split(/[\s,]+/);
-      } else {
-        throw new Error('setNames expects string or array or strings');
-      }
-    }
-
-    for (let name of names) {
-      name = name.replace(/\*/g, '.*?');
-      const exclude = name[0] === '-';
-      let dest = 'includes';
-
-      if (exclude) {
-        name = name.substr(1);
-        dest = 'excludes';
-      }
-
-      const regex = new RegExp(`^${name}$`);
-      this[dest].push(regex);
-    }
+    this.config = read();
   }
 
   child(context = {}) {
@@ -232,7 +222,7 @@ class Logger {
 }
 Logger.includes = [];
 Logger.excludes = [];
-Logger._level = 'info';
+Logger.memo = {};
 
 Logger._time = function () {
   return new Date().toISOString();
